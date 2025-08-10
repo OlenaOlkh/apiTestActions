@@ -39,7 +39,7 @@ jobs:
 
       # Step 6: Run Postman collection
       - name: Run Postman Collection
-        run: newman run https://api.postman.com/collections/4056721-bf10fefb-5757-4d16-a035-b753b07d56f8?apikey=${{ secrets.POSTMAN_API_KEY }} -e ${{ vars.URL }}?apikey=${{ secrets.POSTMAN_API_KEY }} -r cli,htmlextra --reporter-htmlextra-export testResult/htmlreport.html
+        run: newman run https://api.postman.com/collections/4056721-243b0ec3-da80-4bf1-b878-9058e28889ad?apikey=${{ secrets.POSTMAN_API_KEY }} -e ${{ vars.URL }}?apikey=${{ secrets.POSTMAN_API_KEY }} -r cli,htmlextra --reporter-htmlextra-export testResult/htmlreport.html
 
       # Step 7: Save the execution report
       - name: Upload Test Results
