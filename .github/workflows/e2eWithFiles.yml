@@ -41,6 +41,9 @@ jobs:
       - name: Run Postman Collection
         run: newman run "./collections/Lesson 44 e2e.postman_collection.json" -e ${{ vars.URL }}?apikey=${{ secrets.POSTMAN_API_KEY }} -r cli,htmlextra --reporter-htmlextra-export testResult/htmlreport.html
 
+        - name: List files in testResult (for debug)
+        run: ls -la testResult
+
       # Step 7: Save the execution report
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
