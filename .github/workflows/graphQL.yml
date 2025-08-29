@@ -1,0 +1,52 @@
+name: Run DataFile
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Which environment to deploy to'
+        required: true
+        type: environment
+        
+jobs:
+  run-postman-collection:
+    runs-on: ubuntu-latest   
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:            
+            
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js (since newman is a Node.js package)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x' # or another version you need
+
+      # Step 3: Install Newman to run the Postman collection
+      - name: Install Newman
+        run: npm install -g newman
+
+      # Step 4: Install HTML reporter
+      - name: Install html-extra
+        run: npm install -g newman-reporter-htmlextra
+
+      # Step 5: Create a directory for the report
+      - name: Make directory for result
+        run: mkdir -p testResult
+
+      # Step 6: Run Postman collection
+      - name: Run Postman Collection
+        run: newman run "./collections/GraphQL.postman_collection.json" -e ${{ vars.URL }}?apikey=${{ secrets.POSTMAN_API_KEY }} -r cli,htmlextra --reporter-htmlextra-export testResult/htmlreport.html
+       
+      - name: Step 7:List files in testResult (for debug)
+        run: ls -la testResult
+
+      # Step 7: Save the execution report
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Report result
+          path: testResult
