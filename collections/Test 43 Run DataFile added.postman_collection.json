@@ -1,0 +1,611 @@
+{
+	"info": {
+		"_postman_id": "32b74c20-b010-4e4d-9bcb-0e7a624cd743",
+		"name": "Test 43 Run DataFile added",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4056721",
+		"_collection_link": "https://restless-escape-426718.postman.co/workspace/Testing1~bf327e84-f67e-4f64-b154-e634ad9e8c65/collection/4056721-32b74c20-b010-4e4d-9bcb-0e7a624cd743?action=share&source=collection_link&creator=4056721"
+	},
+	"item": [
+		{
+			"name": "First name",
+			"item": [
+				{
+					"name": "Creater User with empty first name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check first name with empty data\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"\\\"name\\\" is not allowed to be empty\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.not.h.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is an expected error code\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"const expectedMessage = pm.iterationData.get(\"nameError\") || \"User already exists\";\r",
+									"\r",
+									"pm.test(\"Check error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(expectedMessage);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let nameData = pm.iterationData.get(\"nameData\");\r",
+									"pm.collectionVariables.set(\"nameData\", nameData);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{nameData}}\",\r\n  \"lastName\": \"Dou\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user first name with wrong language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check first name with wrong language\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"Name is invalid\");    \r",
+									"});*/\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"let nameError = pm.iterationData.get(\"nameError\") || \"User already exists\";\r",
+									"\r",
+									"pm.test(\"Check First name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(nameError);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let nameData = pm.iterationData.get(\"nameData\");\r",
+									"pm.collectionVariables.set(\"nameData\", nameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{nameData}}\",\r\n  \"lastName\": \"Dou\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user with 1 symbol first name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check first name with 1 symbol\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"Name has to be from 2 to 20 characters long\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is not 200 but acceptable\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"let nameError = pm.iterationData.get(\"nameError\") || \"User already exists\";\r",
+									"\r",
+									"pm.test(\"Check First name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(nameError);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let nameData = pm.iterationData.get(\"nameData\");\r",
+									"pm.collectionVariables.set(\"nameData\", nameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{nameData}}\",\r\n  \"lastName\": \"Dou\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user with 21 symbols first name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check first name with 21 symbol\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"Name has to be from 2 to 20 characters long\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is not 200 but acceptable\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"let nameError = pm.iterationData.get(\"nameError\") || \"User already exists\";\r",
+									"\r",
+									"pm.test(\"Check First name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(nameError);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let nameData = pm.iterationData.get(\"nameData\");\r",
+									"pm.collectionVariables.set(\"nameData\", nameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{nameData}}\",\r\n  \"lastName\": \"Dou\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Last name",
+			"item": [
+				{
+					"name": "Creater User with empty last name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check last name with empty data\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"\\\"lastName\\\" is not allowed to be empty\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"\r",
+									"let lastNameError = pm.iterationData.get(\"lastNameError\") || \"User already exists\";\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check Last name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(lastNameError);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let lastNameData = pm.iterationData.get(\"lastNameData\");\r",
+									"pm.collectionVariables.set(\"lastNameData\", lastNameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"John\",\r\n  \"lastName\": \"{{lastNameData}}\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user last name with wrong language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check last name with wrong language\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"User already exists\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is not 200 but acceptable\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"let lastNameError = pm.iterationData.get(\"lastNameError\") || \"User already exists\";\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check Last name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(lastNameError);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let lastNameData = pm.iterationData.get(\"lastNameData\");\r",
+									"pm.collectionVariables.set(\"lastNameData\", lastNameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"John\",\r\n  \"lastName\": \"{{lastNameData}}\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user with 1 symbol last name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check last name with 1 symbol\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"Last Name has to be from 2 to 20 characters long\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is not 200 but acceptable\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"let lastNameError = pm.iterationData.get(\"lastNameError\") || \"User already exists\";\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check Last name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(lastNameError);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let lastNameData = pm.iterationData.get(\"lastNameData\");\r",
+									"pm.collectionVariables.set(\"lastNameData\", lastNameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"John\",\r\n  \"lastName\": \"{{lastNameData}}\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user with 21 symbols last name",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let lastNameData = pm.iterationData.get(\"lastNameData\");\r",
+									"pm.collectionVariables.set(\"lastNameData\", lastNameData)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"/*var response = pm.response.json();\r",
+									"pm.test(\"Check last name with 21 symbol\", function () {\r",
+									"    pm.expect(response.message).to.eql(\"Last Name has to be from 2 to 20 characters long\");    \r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400); // Corrected status code\r",
+									"});*/\r",
+									"\r",
+									"/*pm.test(\"Status code is not 200 but acceptable\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 404, 500]);\r",
+									"});*/\r",
+									"\r",
+									"let lastNameError = pm.iterationData.get(\"lastNameError\") || \"User already exists\";\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check Last name error message\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(lastNameError);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"John\",\r\n  \"lastName\": \"{{lastNameData}}\",\r\n  \"email\": \"test@test.com\",\r\n  \"password\": \"Qwerty12345\",\r\n  \"repeatPassword\": \"Qwerty12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://qauto.forstudy.space/api/auth/signup",
+							"protocol": "https",
+							"host": [
+								"qauto",
+								"forstudy",
+								"space"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "nameData",
+			"value": ""
+		},
+		{
+			"key": "lastNameData",
+			"value": ""
+		}
+	]
+}
