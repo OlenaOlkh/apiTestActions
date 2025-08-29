@@ -8,48 +8,83 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository 
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install grpcurl
+      # Step 2: Install dependencies
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y curl tar jq
+
+      # Step 3: Install grpcurl
       - name: Install grpcurl
         run: |
-          sudo apt update
-          sudo apt install -y curl unzip
-          GRPCURL_VERSION="1.16.0"
-          curl -L -o grpcurl.zip https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.zip
-          unzip grpcurl.zip
+          GRPCURL_VERSION="1.17.0"
+          curl -L -o grpcurl.tar.gz https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz
+          tar -xzf grpcurl.tar.gz
           sudo mv grpcurl /usr/local/bin/
 
-      # Step 3: Call gRPC methods and save responses
-      - name: Call getBarbarian
-        run: grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getBarbarian > warrior_barbarian.json
+      # Step 4: Create warrior.proto
+      - name: Create warrior.proto
+        run: |
+          cat <<EOT > warrior.proto
+          syntax = "proto3";
+          package warrior;
+          import "google/protobuf/empty.proto";
 
-      - name: Call getAssassin
-        run: grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getAssassin > warrior_assassin.json
+          message WarriorDescription {
+              string name = 1;
+              string damageRange = 2;
+              int32 armor = 3;
+              int32 health = 4;
+              string description = 5;
+          }
 
-      - name: Call getEnchantress
-        run: grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getEnchantress > warrior_enchantress.json
+          message WarriorBattleRequest {
+              string warrior1_name = 1;
+              string warrior2_name = 2;
+          }
 
-      - name: Call getWerewolf
-        run: grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getWerewolf > warrior_werewolf.json
+          message WarriorBattleResponse {
+              string result = 1;
+          }
 
-      - name: Call getWarriorByName
-        run: grpcurl -proto warrior.proto -d '{"name":"Barbarian"}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getWarriorByName > warrior_by_name.json
+          service WarriorServer {
+              rpc getAllWarriors(google.protobuf.Empty) returns (stream WarriorDescription);
+              rpc battle(stream WarriorBattleRequest) returns (stream WarriorBattleResponse);
+          }
+          EOT
 
-      - name: Call getAllWarriors
-        run: grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getAllWarriors > all_warriors.json
+      # Step 5: Prepare results directory
+      - name: Prepare results directory
+        run: mkdir -p warrior_results
 
-      # Step 4: Upload all responses as artifacts
+      # Step 6: Get all warriors
+      - name: Get all warriors
+        run: |
+          grpcurl -proto warrior.proto grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getAllWarriors > warrior_results/all_warriors.json
+
+      # Step 7: Generate battle requests (pairs)
+      - name: Generate battle requests
+        run: |
+          # Extract names
+          cat warrior_results/all_warriors.json | jq -r '.name' > warrior_results/names.txt
+
+          # Create battle pairs (simple consecutive pairing)
+          awk 'NR==1{prev=$0; next} {print "{\"warrior1_name\":\""prev"\",\"warrior2_name\":\""$0"\"}"; prev=$0}' warrior_results/names.txt > warrior_results/battle_requests.jsonl
+
+      # Step 8: Call battle method
+      - name: Call battle method
+        run: |
+          grpcurl -proto warrior.proto -d @ grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/battle < warrior_results/battle_requests.jsonl > warrior_results/battle_results.json
+
+      # Step 9: List results
+      - name: List results
+        run: ls -la warrior_results
+
+      # Step 10: Upload artifacts
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: warrior-responses
-          path: |
-            warrior_barbarian.json
-            warrior_assassin.json
-            warrior_enchantress.json
-            warrior_werewolf.json
-            warrior_by_name.json
-            all_warriors.json
+          path: warrior_results
