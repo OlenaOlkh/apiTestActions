@@ -1,0 +1,57 @@
+name: Run Warrior gRPC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-grpc:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository (if proto file is in it)
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Install grpcurl for gRPC calls
+      - name: Install grpcurl
+        run: |
+          sudo apt update
+          sudo apt install -y grpcurl
+
+      # Step 3: Create warrior.proto locally (if not in repo)
+      - name: Create warrior.proto
+        run: |
+          cat <<EOT >> warrior.proto
+          syntax = "proto3";
+
+          package warrior;
+
+          message WarriorDescription {
+              string name = 1;
+              string damageRange = 2;
+              int32 armor = 3;
+              int32 health = 4;
+              string description = 5;
+          }
+
+          service WarriorServer {
+              rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
+          }
+          EOT
+
+      # Step 4: Call gRPC method getBarbarian
+      - name: Call getBarbarian
+        run: |
+          grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getBarbarian
+
+      # Step 5: Save the response
+      - name: Save response
+        run: |
+          grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/getBarbarian > warrior_response.json
+
+      # Step 6: Upload the artifact with the result
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: warrior-response
+          path: warrior_response.json
