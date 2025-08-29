@@ -1,4 +1,4 @@
-name: Run DataFile
+name: Run GraphQL
 
 on:
   workflow_dispatch:
