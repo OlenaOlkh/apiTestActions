@@ -56,7 +56,7 @@ jobs:
           mkdir -p warrior_responses
           for method in getBarbarian getAssassin getEnchantress getWerewolf
           do
-            grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
+            grpcurl -plaintext -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
           done
 
       # Step 5: Upload responses as artifacts
