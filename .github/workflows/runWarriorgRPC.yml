@@ -29,26 +29,28 @@ jobs:
       # Step 3: Create warrior.proto if not exists
       - name: Create warrior.proto
         run: |
-          cat <<EOT > warrior.proto
-          syntax = "proto3";
-          package warrior;
-          import "google/protobuf/empty.proto";
+          if [ ! -f warrior.proto ]; then
+            cat <<EOT > warrior.proto
+syntax = "proto3";
+package warrior;
+import "google/protobuf/empty.proto";
 
-          message WarriorDescription {
-              string name = 1;
-              string damageRange = 2;
-              int32 armor = 3;
-              int32 health = 4;
-              string description = 5;
-          }
+message WarriorDescription {
+    string name = 1;
+    string damageRange = 2;
+    int32 armor = 3;
+    int32 health = 4;
+    string description = 5;
+}
 
-          service WarriorServer {
-              rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
-          }
-          EOT
+service WarriorServer {
+    rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
+    rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
+    rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
+    rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
+}
+EOT
+          fi
 
       # Step 4: Create directories
       - name: Create directories
@@ -73,42 +75,43 @@ jobs:
         run: |
           npm install -g json2html
           cat <<'EOF' > generateReport.js
-          const fs = require('fs');
-          const path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-          const files = fs.readdirSync('warrior_responses');
-          let html = `
-          <html>
-          <head>
-          <title>Warrior Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; }
-            h2 { color: #2a7ae2; }
-          </style>
-          </head>
-          <body>
-          <h1>Warrior gRPC Report</h1>
-          `;
+const files = fs.readdirSync('warrior_responses');
+let html = `
+<html>
+<head>
+<title>Warrior Report</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; }
+  h2 { color: #2a7ae2; }
+</style>
+</head>
+<body>
+<h1>Warrior gRPC Report</h1>
+`;
 
-          files.forEach(file => {
-            const data = JSON.parse(fs.readFileSync(path.join('warrior_responses', file)));
-            html += `<h2>${file.replace('.json','')}</h2>`;
-            html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-          });
-          
-          html += '</body></html>';
-          fs.writeFileSync('testResult/WarriorReport.html', html);
-          EOF
-                    node generateReport.js
-          
-                # Step 8: List files in testResult (debug)
-                - name: List files in testResult
-                  run: ls -la testResult
-          
-                # Step 9: Upload report as artifact
-                - name: Upload HTML Report
-                  uses: actions/upload-artifact@v4
-                  with:
-                    name: Warrior gRPC Report
-                    path: testResult/
+files.forEach(file => {
+  const data = JSON.parse(fs.readFileSync(path.join('warrior_responses', file)));
+  html += `<h2>${file.replace('.json','')}</h2>`;
+  html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+});
+
+html += '</body></html>';
+fs.writeFileSync('testResult/WarriorReport.html', html);
+EOF
+
+          node generateReport.js
+
+      # Step 8: List files in testResult (debug)
+      - name: List files in testResult
+        run: ls -la testResult
+
+      # Step 9: Upload report as artifact
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Warrior gRPC Report
+          path: testResult/
