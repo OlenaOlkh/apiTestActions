@@ -26,7 +26,31 @@ jobs:
           sudo chmod +x /usr/local/bin/grpcurl
           grpcurl -version
 
-      # Step 3: Call Warrior gRPC methods and save responses
+      # Step 3: Create warrior.proto if not exists
+      - name: Create warrior.proto
+        run: |
+          cat <<EOT > warrior.proto
+          syntax = "proto3";
+          package warrior;
+          import "google/protobuf/empty.proto";
+
+          message WarriorDescription {
+              string name = 1;
+              string damageRange = 2;
+              int32 armor = 3;
+              int32 health = 4;
+              string description = 5;
+          }
+
+          service WarriorServer {
+              rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
+              rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
+              rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
+              rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
+          }
+          EOT
+
+      # Step 4: Call Warrior gRPC methods
       - name: Call all Warrior methods
         run: |
           mkdir -p warrior_responses
@@ -35,7 +59,7 @@ jobs:
             grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
           done
 
-      # Step 4: Upload artifacts with results
+      # Step 5: Upload responses as artifacts
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
