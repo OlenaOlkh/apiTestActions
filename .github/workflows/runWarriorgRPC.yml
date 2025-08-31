@@ -2,10 +2,16 @@ name: Run Warrior gRPC
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose the environment (e.g., dev, staging, prod)'
+        required: true
+        type: string
 
 jobs:
   run-grpc:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
       # Step 1: Checkout repository
@@ -26,42 +32,80 @@ jobs:
           sudo chmod +x /usr/local/bin/grpcurl
           grpcurl -version
 
-      # Step 3: Create warrior.proto if not exists
-      - name: Create warrior.proto
+      # Step 3: Ensure warrior.proto exists
+      - name: Ensure warrior.proto
         run: |
-          cat <<EOT > warrior.proto
-          syntax = "proto3";
-          package warrior;
-          import "google/protobuf/empty.proto";
+          if [ ! -f warrior.proto ]; then
+            cat <<EOT > warrior.proto
+            syntax = "proto3";
+            package warrior;
+            import "google/protobuf/empty.proto";
 
-          message WarriorDescription {
-              string name = 1;
-              string damageRange = 2;
-              int32 armor = 3;
-              int32 health = 4;
-              string description = 5;
-          }
+            message WarriorDescription {
+                string name = 1;
+                string damageRange = 2;
+                int32 armor = 3;
+                int32 health = 4;
+                string description = 5;
+            }
 
-          service WarriorServer {
-              rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
-              rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
-          }
-          EOT
+            service WarriorServer {
+                rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
+                rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
+                rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
+                rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
+            }
+            EOT
+          fi
 
-      # Step 4: Call Warrior gRPC methods
+      # Step 4: Create directories
+      - name: Create directories
+        run: mkdir -p warrior_responses testResult
+
+      # Step 5: Call Warrior gRPC methods
       - name: Call all Warrior methods
         run: |
-          mkdir -p warrior_responses
           for method in getBarbarian getAssassin getEnchantress getWerewolf
           do
-            grpcurl -plaintext -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
+            grpcurl -plaintext -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json || echo "$method failed"
           done
 
-      # Step 5: Upload responses as artifacts
-      - name: Upload Test Results
+      # Step 6: Install Node.js for report generation
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      # Step 7: Generate HTML report from JSON
+      - name: Generate HTML report
+        run: |
+          npm install -g json2html
+          cat <<'EOF' > generateReport.js
+          const fs = require('fs');
+          const path = require('path');
+          const json2html = require('json2html');
+
+          const files = fs.readdirSync('warrior_responses');
+          let html = '<html><head><title>Warrior Report</title></head><body><h1>Warrior gRPC Report</h1>';
+
+          files.forEach(file => {
+            const data = JSON.parse(fs.readFileSync(path.join('warrior_responses', file)));
+            html += `<h2>${file.replace('.json','')}</h2>`;
+            html += `<pre>${json2html.transform(data)}</pre>`;
+          });
+
+          html += '</body></html>';
+          fs.writeFileSync('testResult/WarriorReport.html', html);
+          EOF
+          node generateReport.js
+
+      # Step 8: List files in testResult (debug)
+      - name: List files in testResult
+        run: ls -la testResult
+
+      # Step 9: Upload report as artifact
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
-          name: warrior-responses
-          path: warrior_responses/
+          name: Warrior gRPC Report
+          path: testResult/
