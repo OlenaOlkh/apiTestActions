@@ -2,16 +2,10 @@ name: Run Warrior gRPC
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Choose the environment (e.g., dev, staging, prod)'
-        required: true
-        type: string
 
 jobs:
   run-grpc:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
 
     steps:
       # Step 1: Checkout repository
