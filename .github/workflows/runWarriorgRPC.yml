@@ -12,19 +12,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install grpcurl
-      - name: Install grpcurl
+      # Step 2: Setup tools (grpcurl + Node.js)
+      - name: Setup tools
         run: |
+          # Install dependencies
           sudo apt update
           sudo apt install -y curl wget tar
+
+          # Install grpcurl
           GRPCURL_VERSION="1.9.3"
           URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz"
-          echo "Downloading grpcurl version ${GRPCURL_VERSION}..."
           wget -O grpcurl.tar.gz "$URL"
           tar -xvzf grpcurl.tar.gz
           sudo mv grpcurl /usr/local/bin/
-          sudo chmod +x /usr/local/bin/grpcurl
-          grpcurl -version
+          sudo chmod +x /usr/local/bin/
+          grpcurl --version
+
+        # Node.js setup via action
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
 
       # Step 3: Create warrior.proto if not exists
       - name: Create warrior.proto
@@ -58,19 +66,15 @@ EOT
 
       # Step 5: Call Warrior gRPC methods
       - name: Call all Warrior methods
+        continue-on-error: true
         run: |
           for method in getBarbarian getAssassin getEnchantress getWerewolf
           do
+            echo "Calling $method..."
             grpcurl -plaintext -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json || echo "$method failed"
           done
 
-      # Step 6: Install Node.js for report generation
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-
-      # Step 7: Generate formatted HTML report from JSON
+      # Step 6: Generate formatted HTML report from JSON
       - name: Generate HTML report
         run: |
           npm install -g json2html
@@ -94,9 +98,13 @@ let html = `
 `;
 
 files.forEach(file => {
-  const data = JSON.parse(fs.readFileSync(path.join('warrior_responses', file)));
-  html += `<h2>${file.replace('.json','')}</h2>`;
-  html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join('warrior_responses', file)));
+    html += `<h2>${file.replace('.json','')}</h2>`;
+    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  } catch(e) {
+    html += `<h2>${file.replace('.json','')}</h2><pre>Failed to parse JSON</pre>`;
+  }
 });
 
 html += '</body></html>';
@@ -105,13 +113,13 @@ EOF
 
           node generateReport.js
 
-      # Step 8: List files in testResult (debug)
+      # Step 7: List files in testResult (debug)
       - name: List files in testResult
         run: ls -la testResult
 
-      # Step 9: Upload report as artifact
+      # Step 8: Upload report as artifact
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: Warrior gRPC Report
-          path: testResult/
+          path: testResult/WarriorReport.html
