@@ -17,38 +17,25 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y curl wget tar
-
-          GRPCURL_VERSION="1.21.0"
+          GRPCURL_VERSION="1.9.3"
           URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz"
-
-          echo "Downloading grpcurl version $GRPCURL_VERSION..."
+          echo "Downloading grpcurl version ${GRPCURL_VERSION}..."
           wget -O grpcurl.tar.gz "$URL"
-
-          # Check file size
-          FILE_SIZE=$(stat -c%s "grpcurl.tar.gz")
-          if [ "$FILE_SIZE" -lt 100000 ]; then
-            echo "Error: Downloaded grpcurl.tar.gz is too small ($FILE_SIZE bytes). Exiting."
-            exit 1
-          fi
-
-          # Extract and move binary
-          tar -xzf grpcurl.tar.gz
+          tar -xvzf grpcurl.tar.gz
           sudo mv grpcurl /usr/local/bin/
           sudo chmod +x /usr/local/bin/grpcurl
-
-          # Verify installation
           grpcurl -version
 
-      # Step 3: Call Warrior methods and save responses
-      - name: Call Warrior methods
+      # Step 3: Call Warrior gRPC methods and save responses
+      - name: Call all Warrior methods
         run: |
           mkdir -p warrior_responses
-          for method in getBarbarian getAssassin getEnchantress getWerewolf; do
-            echo "Calling $method..."
-            grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json || echo "$method failed"
+          for method in getBarbarian getAssassin getEnchantress getWerewolf
+          do
+            grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
           done
 
-      # Step 4: Upload artifacts
+      # Step 4: Upload artifacts with results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
