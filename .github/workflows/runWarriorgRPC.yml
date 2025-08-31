@@ -12,60 +12,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install grpcurl with file check
+      # Step 2: Install grpcurl
       - name: Install grpcurl
         run: |
           sudo apt update
-          sudo apt install -y curl unzip wget
-          
-          GRPCURL_VERSION="1.17.0"
-          URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.zip"
-          
-          echo "Downloading grpcurl..."
-          wget -O grpcurl.zip "$URL"
-          
+          sudo apt install -y curl wget tar
+
+          GRPCURL_VERSION="1.21.0"
+          URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz"
+
+          echo "Downloading grpcurl version $GRPCURL_VERSION..."
+          wget -O grpcurl.tar.gz "$URL"
+
           # Check file size
-          FILE_SIZE=$(stat -c%s "grpcurl.zip")
+          FILE_SIZE=$(stat -c%s "grpcurl.tar.gz")
           if [ "$FILE_SIZE" -lt 100000 ]; then
-            echo "Error: Downloaded grpcurl.zip is too small ($FILE_SIZE bytes). Exiting."
+            echo "Error: Downloaded grpcurl.tar.gz is too small ($FILE_SIZE bytes). Exiting."
             exit 1
           fi
-          
-          unzip -o grpcurl.zip
+
+          # Extract and move binary
+          tar -xzf grpcurl.tar.gz
           sudo mv grpcurl /usr/local/bin/
           sudo chmod +x /usr/local/bin/grpcurl
+
+          # Verify installation
           grpcurl -version
 
-      # Step 3: Create warrior.proto
-      - name: Create warrior.proto
-        run: |
-          cat <<EOT >> warrior.proto
-          syntax = "proto3";
-          package warrior;
-          import "google/protobuf/empty.proto";
-          import "google/protobuf/wrappers.proto";
-
-          message WarriorDescription { string name = 1; string damageRange = 2; int32 armor = 3; int32 health = 4; string description = 5; }
-          message WarriorBattleRequest { string warrior1_name = 1; string warrior2_name = 2; }
-          message WarriorBattleResponse { Warrior warrior1 = 1; Warrior warrior2 = 2; }
-          message Warrior { string name = 1; int32 health = 2; int32 damage = 3; int32 armor = 4; bool isPowerActive = 5; }
-          message TestWarriorSuperPowerRequest { string warrior1_name = 1; }
-          message TestWarriorSuperPowerResponse { int32 countActivePower = 1; int32 countDeactivatePower = 2; }
-          message GetWarriorByNameRequest { string name = 1; }
-
-          service WarriorServer {
-            rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
-            rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
-            rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
-            rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
-            rpc getWarriorByName(GetWarriorByNameRequest) returns (WarriorDescription);
-            rpc getAllWarriors(google.protobuf.Empty) returns (stream WarriorDescription);
-            rpc battle(stream WarriorBattleRequest) returns (stream WarriorBattleResponse);
-            rpc testWarriorSuperPower(stream TestWarriorSuperPowerRequest) returns (TestWarriorSuperPowerResponse);
-          }
-          EOT
-
-      # Step 4: Call methods and save JSON responses
+      # Step 3: Call Warrior methods and save responses
       - name: Call Warrior methods
         run: |
           mkdir -p warrior_responses
@@ -74,7 +48,7 @@ jobs:
             grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json || echo "$method failed"
           done
 
-      # Step 5: Upload artifacts
+      # Step 4: Upload artifacts
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
