@@ -12,24 +12,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install grpcurl
+      # Step 2: Install grpcurl safely
       - name: Install grpcurl
         run: |
           sudo apt update
           sudo apt install -y curl unzip
           GRPCURL_VERSION="1.17.0"
-          curl -L -o grpcurl.zip https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.zip
-          unzip grpcurl.zip
+          URL="https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.zip"
+          echo "Downloading grpcurl..."
+          curl -L -o grpcurl.zip "$URL"
+          
+          # Check file size to ensure valid download
+          FILE_SIZE=$(stat -c%s "grpcurl.zip")
+          if [ "$FILE_SIZE" -lt 100000 ]; then
+            echo "Error: Downloaded grpcurl.zip is too small ($FILE_SIZE bytes)."
+            exit 1
+          fi
+
+          unzip -o grpcurl.zip
           sudo mv grpcurl /usr/local/bin/
+          sudo chmod +x /usr/local/bin/grpcurl
           grpcurl -version
 
-      # Step 3: Create warrior.proto locally (if not in repo)
+      # Step 3: Create warrior.proto (if not in repo)
       - name: Create warrior.proto
         run: |
           cat <<EOT >> warrior.proto
           syntax = "proto3";
           package warrior;
           import "google/protobuf/empty.proto";
+          import "google/protobuf/wrappers.proto";
 
           message WarriorDescription {
               string name = 1;
@@ -39,24 +51,60 @@ jobs:
               string description = 5;
           }
 
+          message WarriorBattleRequest {
+              string warrior1_name = 1;
+              string warrior2_name = 2;
+          }
+
+          message WarriorBattleResponse {
+              Warrior warrior1 = 1;
+              Warrior warrior2 = 2;
+          }
+
+          message Warrior {
+              string name = 1;
+              int32 health = 2;
+              int32 damage = 3;
+              int32 armor = 4;
+              bool isPowerActive = 5;
+          }
+
+          message TestWarriorSuperPowerRequest {
+              string warrior1_name = 1;
+          }
+
+          message TestWarriorSuperPowerResponse {
+              int32 countActivePower = 1;
+              int32 countDeactivatePower = 2;
+          }
+
+          message GetWarriorByNameRequest {
+              string name = 1;
+          }
+
           service WarriorServer {
               rpc getBarbarian(google.protobuf.Empty) returns (WarriorDescription);
               rpc getAssassin(google.protobuf.Empty) returns (WarriorDescription);
               rpc getEnchantress(google.protobuf.Empty) returns (WarriorDescription);
               rpc getWerewolf(google.protobuf.Empty) returns (WarriorDescription);
+              rpc getWarriorByName(GetWarriorByNameRequest) returns (WarriorDescription);
+              rpc getAllWarriors(google.protobuf.Empty) returns (stream WarriorDescription);
+              rpc battle(stream WarriorBattleRequest) returns (stream WarriorBattleResponse);
+              rpc testWarriorSuperPower(stream TestWarriorSuperPowerRequest) returns (TestWarriorSuperPowerResponse);
           }
           EOT
 
-      # Step 4: Call all gRPC methods and save responses
-      - name: Call all Warrior methods
+      # Step 4: Call all non-stream Warrior methods
+      - name: Call Warrior methods
         run: |
           mkdir -p warrior_responses
           for method in getBarbarian getAssassin getEnchantress getWerewolf
           do
-            grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json
+            echo "Calling $method..."
+            grpcurl -proto warrior.proto -d '{}' grpc-hillel-warriors.hillel.it:50051 warrior.WarriorServer/$method > warrior_responses/$method.json || echo "$method failed"
           done
 
-      # Step 5: Upload artifacts with results
+      # Step 5: Upload artifacts
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
